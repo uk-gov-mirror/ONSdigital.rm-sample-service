@@ -43,7 +43,7 @@ import validation.SampleUnitBase;
 public class CsvIngesterBusiness extends CsvToBean<BusinessSampleUnit> {
   private static final Logger log = LoggerFactory.getLogger(CsvIngesterBusiness.class);
 
-  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(200);
 
   private static final String SAMPLEUNITREF = "sampleUnitRef";
   private static final String FORMTYPE = "formType";

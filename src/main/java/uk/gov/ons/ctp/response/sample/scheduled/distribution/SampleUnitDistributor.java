@@ -36,7 +36,7 @@ public class SampleUnitDistributor {
 
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
 
-  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(50);
 
   @Autowired private AppConfig appConfig;
 
