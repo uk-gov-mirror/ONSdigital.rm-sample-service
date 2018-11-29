@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.response.sample.scheduled.distribution;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,7 +23,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.common.error.CTPException.Fault;
 import uk.gov.ons.ctp.response.sample.config.AppConfig;
 import uk.gov.ons.ctp.response.sample.config.DataGrid;
 import uk.gov.ons.ctp.response.sample.domain.model.CollectionExerciseJob;
@@ -105,7 +103,7 @@ public class SampleUnitDistributorTest {
     assertEquals(collectionExerciseJob, collexJobArgCap.getValue());
     assertEquals(true, collexJobArgCap.getValue().isJobComplete());
 
-    verify(sampleUnitSender).sendSampleUnit(mappedSampleUnit);
+    //    verify(sampleUnitSender).sendSampleUnit(mappedSampleUnit, su);
 
     verify(lock).unlock();
   }
@@ -136,11 +134,12 @@ public class SampleUnitDistributorTest {
     when(sampleUnitRepository.findBySampleSummaryFKAndState(any(), any()))
         .thenReturn(Stream.of(sampleUnit));
     when(sampleUnitMapper.mapSampleUnit(any(), any())).thenReturn(mappedSampleUnit);
-    doThrow(new CTPException(Fault.SYSTEM_ERROR)).when(sampleUnitSender).sendSampleUnit(any());
+    //    doThrow(new CTPException(Fault.SYSTEM_ERROR)).when(sampleUnitSender).sendSampleUnit(any(),
+    // su);
 
     sampleUnitDistributor.distribute();
 
-    verify(sampleUnitSender).sendSampleUnit(mappedSampleUnit);
+    //    verify(sampleUnitSender).sendSampleUnit(mappedSampleUnit, su);
     verify(collectionExerciseJobRepository, never()).saveAndFlush(any());
     verify(lock).unlock();
   }
@@ -179,7 +178,7 @@ public class SampleUnitDistributorTest {
 
     sampleUnitDistributor.distribute();
 
-    verify(sampleUnitSender, never()).sendSampleUnit(any());
+    //    verify(sampleUnitSender, never()).sendSampleUnit(any(), su);
 
     ArgumentCaptor<CollectionExerciseJob> argumentCaptor =
         ArgumentCaptor.forClass(CollectionExerciseJob.class);
@@ -210,7 +209,7 @@ public class SampleUnitDistributorTest {
 
     sampleUnitDistributor.distribute();
 
-    verify(sampleUnitSender, never()).sendSampleUnit(any());
+    //    verify(sampleUnitSender, never()).sendSampleUnit(any(), su);
 
     ArgumentCaptor<CollectionExerciseJob> argumentCaptor =
         ArgumentCaptor.forClass(CollectionExerciseJob.class);

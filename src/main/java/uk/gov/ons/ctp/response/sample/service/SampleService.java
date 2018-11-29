@@ -131,6 +131,21 @@ public class SampleService {
     }
   }
 
+  public SampleSummary activateSampleSummaryState(String sampleSummaryId) throws CTPException {
+    SampleSummary targetSampleSummary =
+        sampleSummaryRepository.findById(UUID.fromString(sampleSummaryId));
+    SampleState newState =
+        sampleSvcStateTransitionManager.transition(
+            targetSampleSummary.getState(), SampleEvent.ACTIVATED);
+    targetSampleSummary.setState(newState);
+    targetSampleSummary.setIngestDateTime(DateTimeUtil.nowUTC());
+    sampleSummaryRepository.saveAndFlush(targetSampleSummary);
+    // Notify the outside world the sample upload has finished
+    this.sampleOutboundPublisher.sampleUploadFinished(targetSampleSummary);
+
+    return targetSampleSummary;
+  }
+
   /**
    * Effect a state transition for the target SampleSummary if one is required
    *
@@ -159,7 +174,7 @@ public class SampleService {
         sampleUnitRepository.findById(
             UUID.fromString(partyCreationRequest.getAttributes().getSampleUnitId()));
     changeSampleUnitState(sampleUnit);
-    sampleSummaryStateCheck(sampleUnit);
+    // sampleSummaryStateCheck(sampleUnit);
     return returnedParty;
   }
 
@@ -168,7 +183,7 @@ public class SampleService {
         sampleSvcUnitStateTransitionManager.transition(
             sampleUnit.getState(), SampleUnitEvent.PERSISTING);
     sampleUnit.setState(newState);
-    sampleUnitRepository.saveAndFlush(sampleUnit);
+    sampleUnitRepository.save(sampleUnit);
   }
 
   private void sampleSummaryStateCheck(SampleUnit sampleUnit) throws CTPException {

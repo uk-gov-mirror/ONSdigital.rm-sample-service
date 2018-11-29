@@ -5,6 +5,7 @@ import com.godaddy.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.scheduling.annotation.Async;
 import uk.gov.ons.ctp.response.party.definition.PartyCreationRequestDTO;
 import uk.gov.ons.ctp.response.sample.service.SampleService;
 
@@ -15,6 +16,7 @@ public class PartyReceiver {
   @Autowired private SampleService sampleService;
 
   @ServiceActivator(inputChannel = "partyTransformed", adviceChain = "partyRetryAdvice")
+  @Async
   public void acceptParty(PartyCreationRequestDTO party) throws Exception {
     log.with("party", party).debug("acceptParty");
     sampleService.sendToPartyService(party);

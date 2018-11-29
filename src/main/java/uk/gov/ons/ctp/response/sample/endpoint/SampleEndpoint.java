@@ -123,7 +123,7 @@ public final class SampleEndpoint extends CsvToBean<BusinessSampleUnit> {
           try {
             return Optional.of(this.sampleService.ingest(newSummary, file, type));
           } catch (Exception e) {
-            log.with("sample_id", newSummary.getId()).error("Failed to ingest sample", e);
+            log.with("summary", newSummary).error("Failed to ingest sample", e);
             return this.sampleService.failSampleSummary(newSummary, e);
           }
         };

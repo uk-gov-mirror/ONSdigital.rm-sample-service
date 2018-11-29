@@ -2,8 +2,13 @@ package uk.gov.ons.ctp.response.sample.scheduled.distribution;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -31,7 +36,7 @@ public class SampleUnitDistributor {
 
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
 
-  private boolean hasErrors;
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
 
   @Autowired private AppConfig appConfig;
 
@@ -78,29 +83,44 @@ public class SampleUnitDistributor {
   private void processJob(CollectionExerciseJob job) {
     SampleSummary sampleSummary = sampleSummaryRepository.findById(job.getSampleSummaryId());
 
-    hasErrors = false;
+    final AtomicInteger errorCount = new AtomicInteger();
 
     if (sampleSummary.getState() == SampleState.ACTIVE) {
+      List<Callable<Boolean>> callables = new LinkedList<>();
+
       try (Stream<uk.gov.ons.ctp.response.sample.domain.model.SampleUnit> sampleUnits =
           sampleUnitRepository.findBySampleSummaryFKAndState(
               sampleSummary.getSampleSummaryPK(), SampleUnitState.PERSISTED)) {
         sampleUnits.forEach(
             su -> {
-              SampleUnit mappedSampleUnit =
-                  sampleUnitMapper.mapSampleUnit(su, job.getCollectionExerciseId().toString());
+              callables.add(
+                  () -> {
+                    SampleUnit mappedSampleUnit =
+                        sampleUnitMapper.mapSampleUnit(
+                            su, job.getCollectionExerciseId().toString());
 
-              try {
-                sampleUnitSender.sendSampleUnit(mappedSampleUnit);
-              } catch (CTPException e) {
-                hasErrors = true;
-                log.with("sample_unit_id", mappedSampleUnit.getId())
-                    .error("Failed to send a sample unit to queue and update state", e);
-              }
+                    try {
+                      sampleUnitSender.sendSampleUnit(mappedSampleUnit, su);
+                    } catch (CTPException e) {
+                      errorCount.incrementAndGet();
+                      log.with("sample_unit_id", mappedSampleUnit.getId())
+                          .error("Failed to send a sample unit to queue and update state", e);
+                    }
+
+                    return Boolean.TRUE;
+                  });
             });
+      }
+
+      try {
+        EXECUTOR_SERVICE.invokeAll(callables);
+      } catch (InterruptedException e) {
+        e.printStackTrace(); // TODO: Don't care at the moment... just hacking performance
       }
     }
 
-    if (!hasErrors) {
+    if (errorCount.get() == 0) {
+      sampleUnitRepository.flush();
       job.setJobComplete(true);
       collectionExerciseJobRepository.saveAndFlush(job);
     }

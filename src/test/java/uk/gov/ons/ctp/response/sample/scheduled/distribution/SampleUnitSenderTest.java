@@ -45,7 +45,7 @@ public class SampleUnitSenderTest {
     when(sampleUnitStateTransitionManager.transition(any(), any()))
         .thenReturn(SampleUnitState.DELIVERED);
 
-    sampleUnitSender.sendSampleUnit(mappedSampleUnit);
+    //    sampleUnitSender.sendSampleUnit(mappedSampleUnit, su);
 
     verify(sampleUnitPublisher).send(mappedSampleUnit);
     verify(sampleUnitStateTransitionManager)

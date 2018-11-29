@@ -2,11 +2,8 @@ package uk.gov.ons.ctp.response.sample.scheduled.distribution;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.sample.domain.repository.SampleUnitRepository;
@@ -40,24 +37,26 @@ public class SampleUnitSender {
   }
 
   /** Send a SampleUnit */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void sendSampleUnit(SampleUnit mappedSampleUnit) throws CTPException {
-    uk.gov.ons.ctp.response.sample.domain.model.SampleUnit sampleUnit =
-        sampleUnitRepository.findById(UUID.fromString(mappedSampleUnit.getId()));
+  //  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void sendSampleUnit(
+      SampleUnit mappedSampleUnit, uk.gov.ons.ctp.response.sample.domain.model.SampleUnit su)
+      throws CTPException {
+    //    uk.gov.ons.ctp.response.sample.domain.model.SampleUnit sampleUnit =
+    //        sampleUnitRepository.findById(UUID.fromString(mappedSampleUnit.getId()));
 
     // Highly unlikely, but do a quick (and inexpensive) check to make sure we haven't already
     // delivered this Sample Unit - could happen if there's a problem with the locking/Redis
     // timing out and releasing the lock due to the delivery process taking a long time.
-    if (sampleUnit.getState() == SampleUnitState.PERSISTED) {
-      // Send to Rabbit queue
-      sampleUnitPublisher.send(mappedSampleUnit);
+    //    if (sampleUnit.getState() == SampleUnitState.PERSISTED) {
+    // Send to Rabbit queue
+    sampleUnitPublisher.send(mappedSampleUnit);
 
-      // Because we've now successfully queued the message we can change the state in the DB
-      SampleUnitDTO.SampleUnitState newState =
-          sampleUnitStateTransitionManager.transition(
-              sampleUnit.getState(), SampleUnitDTO.SampleUnitEvent.DELIVERING);
-      sampleUnit.setState(newState);
-      sampleUnitRepository.saveAndFlush(sampleUnit);
-    }
+    // Because we've now successfully queued the message we can change the state in the DB
+    SampleUnitDTO.SampleUnitState newState =
+        sampleUnitStateTransitionManager.transition(
+            su.getState(), SampleUnitDTO.SampleUnitEvent.DELIVERING);
+    su.setState(newState);
+    sampleUnitRepository.save(su);
+    //    }
   }
 }
