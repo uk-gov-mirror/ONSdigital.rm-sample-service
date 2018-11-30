@@ -54,15 +54,16 @@ spring:
   application:
     name: ONS SampleService
   datasource:
-    type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:postgresql://localhost:6432/postgres
     username: samplesvc
     password: samplesvc
+    driverClassName: org.postgresql.Driver
     continue-on-error: true
-    hikari:
-      minimum-idle: 1
-      maximum-pool-size: 20
-      auto-commit: false
+    tomcat:
+      initial-size: 5
+      max-active: 20
+      max-idle: 5
+      min-idle: 3
   http:
     multipart:
       max-file-size: 50MB
@@ -72,17 +73,12 @@ spring:
     baseUrl: http://localhost:9411
     enabled: false
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQL94Dialect
     show-sql: false
     properties:
       hibernate:
         ddl-auto: update
         default_schema: sample
-    hibernate:
-      ddl-auto: update
-      default_schema: sample
-      connection:
-        provider_class: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
 
 party-svc:
   sample-path: /events
