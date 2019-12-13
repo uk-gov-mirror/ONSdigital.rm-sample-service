@@ -2,6 +2,7 @@ liquibase:
   user: postgres
   password: postgres
   url: jdbc:postgresql://localhost:36432/postgres
+  changeLog: classpath:/database/changelog-master.yml
 
 spring:
   datasource:
