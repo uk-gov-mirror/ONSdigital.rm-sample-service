@@ -46,7 +46,7 @@ public class SampleUnit implements Serializable {
   private Integer sampleUnitPK;
 
   @Column(name = "id")
-  private UUID id;
+  private UUID id = UUID.randomUUID();
 
   @Column(name = "samplesummaryfk")
   private Integer sampleSummaryFK;

@@ -1,17 +1,8 @@
 -- Sample schema change CTPA-1648
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 -- Create id columns to allow null
 ALTER TABLE sample.samplesummary ADD COLUMN id uuid;
 ALTER TABLE sample.sampleunit    ADD COLUMN id uuid;
-
--- Add uuids 
-UPDATE  sample.samplesummary
-SET id = gen_random_uuid();
-
-UPDATE sample.sampleunit
-SET id = gen_random_uuid();
 
 -- Set id columns to not null
 ALTER TABLE sample.samplesummary ALTER COLUMN id SET NOT NULL;

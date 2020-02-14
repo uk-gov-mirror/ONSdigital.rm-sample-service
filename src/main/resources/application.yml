@@ -17,6 +17,13 @@ logging:
   profile: DEV
   useJson: false
 
+liquibase:
+  user: samplesvc
+  password: samplesvc
+  default-schema: sample
+  url: jdbc:postgresql://localhost:6432/postgres
+  changeLog: classpath:/database/changelog-master.yml
+
 security:
   basic:
     enabled: true
@@ -48,8 +55,8 @@ spring:
     name: ONS SampleService
   datasource:
     url: jdbc:postgresql://10.150.0.37:5432/postgres
-    username: rasuser
-    password: raspassword
+    username: samplesvc
+    password: samplesvc
     driverClassName: org.postgresql.Driver
     continue-on-error: true
     tomcat:
